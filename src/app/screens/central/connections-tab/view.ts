@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -20,12 +20,14 @@
 import {Stream} from 'xstream';
 import {h} from '@cycle/react';
 import {ScrollView, View, TouchableHighlight} from 'react-native';
+import * as React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {styles} from './styles';
 import {State} from './model';
-import ConnectionsList from '../../../components/ConnectionsList';
 import {Palette} from '../../../global-styles/palette';
 import {Dimensions} from '../../../global-styles/dimens';
+import ConnectionsList from '../../../components/ConnectionsList';
+import StagedConnectionsList from '../../../components/StagedConnectionsList';
 import EmptySection from '../../../components/EmptySection';
 
 type ModeProps = {
@@ -74,12 +76,12 @@ function ConnectivityModes(state: State) {
       label: 'Local Network Mode',
     }),
 
-    // h(ConnectivityMode, {
-    //   sel: 'dht-mode',
-    //   active: false,
-    //   icon: 'account-network',
-    //   label: 'Internet P2P Mode',
-    // }),
+    h(ConnectivityMode, {
+      sel: 'dht-mode',
+      active: state.internetEnabled,
+      icon: 'account-network',
+      label: 'Internet P2P Mode',
+    }),
 
     h(ConnectivityMode, {
       sel: 'pub-mode',
@@ -90,30 +92,48 @@ function ConnectivityModes(state: State) {
   ]);
 }
 
+function Body(state: State) {
+  const {lanEnabled, internetEnabled, peers, stagedPeers} = state;
+  if (!lanEnabled && !internetEnabled) {
+    return h(EmptySection, {
+      style: styles.emptySection,
+      image: require('../../../../../images/noun-lantern.png'),
+      title: 'Offline',
+      description:
+        'Turn on some connection mode\nor just enjoy some existing content',
+    });
+  }
+
+  if (peers.length === 0 && stagedPeers.length === 0) {
+    return h(EmptySection, {
+      style: styles.emptySection,
+      image: require('../../../../../images/noun-crops.png'),
+      title: 'No connections',
+      description:
+        'Invite a friend to connect with\nor sync with people nearby',
+    });
+  }
+
+  return h(React.Fragment, [
+    peers.length > 0
+      ? h(ConnectionsList, {
+          sel: 'connections-list',
+          peers,
+          style: styles.connectionsList,
+        })
+      : null as any,
+
+    stagedPeers.length > 0
+      ? h(StagedConnectionsList, {peers: state.stagedPeers})
+      : null as any,
+  ]);
+}
+
 export default function view(state$: Stream<State>) {
   return state$.map(state => {
-    const isOffline = !state.lanEnabled && !state.internetEnabled;
-
     return h(ScrollView, {style: styles.container}, [
       ConnectivityModes(state),
-
-      isOffline
-        ? h(EmptySection, {
-            style: styles.emptySection,
-            image: require('../../../../../images/noun-lantern.png'),
-            title: 'Offline',
-            description:
-              'Turn on some connection mode\nor just enjoy some existing content',
-          })
-        : state.peers.length === 0
-          ? h(EmptySection, {
-              style: styles.emptySection,
-              image: require('../../../../../images/noun-crops.png'),
-              title: 'No connections',
-              description:
-                'Invite a friend to connect with\nor sync with people nearby',
-            })
-          : h(ConnectionsList, {sel: 'connections-list', peers: state.peers}),
+      Body(state),
     ]);
   });
 }

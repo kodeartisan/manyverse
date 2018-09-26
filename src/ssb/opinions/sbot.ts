@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -50,6 +50,8 @@ const gives = {
       progress: true,
       publish: true,
       acceptInvite: true,
+      acceptDhtInvite: true,
+      createDhtInvite: true,
       addBlob: true,
       gossipConnect: true,
       friendsGet: true,
@@ -66,6 +68,8 @@ const gives = {
       feed: true,
       links: true,
       backlinks: true,
+      hostingDhtInvites: true,
+      claimingDhtInvites: true,
       stream: true,
     },
     obs: {
@@ -213,6 +217,12 @@ const create = (api: any) => {
         acceptInvite: rec.async((invite: string, cb: any) => {
           sbot.invite.accept(invite, cb);
         }),
+        acceptDhtInvite: rec.async((invite: string, cb: any) => {
+          sbot.dhtInvite.accept(invite, cb);
+        }),
+        createDhtInvite: rec.async((cb: any) => {
+          sbot.dhtInvite.create(cb);
+        }),
         addBlob: rec.async((stream: any, cb: any) => {
           return pull(stream, sbot.blobs.add(cb));
         }),
@@ -264,6 +274,12 @@ const create = (api: any) => {
         }),
         links: rec.source((query: any) => {
           return sbot.links(query);
+        }),
+        hostingDhtInvites: rec.source(() => {
+          return sbot.dhtInvite.hostingInvites();
+        }),
+        claimingDhtInvites: rec.source(() => {
+          return sbot.dhtInvite.claimingInvites();
         }),
         stream: (fn: any) => {
           const stream = defer.source();

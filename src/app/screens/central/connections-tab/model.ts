@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -18,30 +18,38 @@
  */
 
 import xs, {Stream} from 'xstream';
+import concat from 'xstream/extra/concat';
 import {PeerMetadata, FeedId} from 'ssb-typescript';
 import {Reducer} from 'cycle-onionify';
-import {SSBSource} from '../../../drivers/ssb';
+import {SSBSource, StagedPeerMetadata} from '../../../drivers/ssb';
 import {NetworkSource} from '../../../drivers/network';
+import dropRepeats from 'xstream/extra/dropRepeats';
 
 export type State = {
   selfFeedId: FeedId;
   lanEnabled: boolean;
   internetEnabled: boolean;
   peers: Array<PeerMetadata>;
+  stagedPeers: Array<StagedPeerMetadata>;
   isSyncing: boolean;
+  isVisible: boolean;
 };
 
 export default function model(
+  state$: Stream<State>,
   ssbSource: SSBSource,
   networkSource: NetworkSource,
 ): Stream<Reducer<State>> {
-  const initReducer$ = xs.of(function initReducer(): State {
+  const initReducer$ = xs.of(function initReducer(prev?: State): State {
+    if (prev) return prev;
     return {
       selfFeedId: '',
       lanEnabled: false,
       internetEnabled: false,
       isSyncing: false,
+      isVisible: false,
       peers: [],
+      stagedPeers: [],
     };
   });
 
@@ -53,7 +61,9 @@ export default function model(
           lanEnabled: prev.lanEnabled,
           internetEnabled: prev.internetEnabled,
           isSyncing,
+          isVisible: prev.isVisible,
           peers: prev.peers,
+          stagedPeers: prev.stagedPeers,
         };
       },
   );
@@ -70,13 +80,26 @@ export default function model(
             lanEnabled,
             internetEnabled: prev.internetEnabled,
             isSyncing: prev.isSyncing,
+            isVisible: prev.isVisible,
             peers: prev.peers,
+            stagedPeers: prev.stagedPeers,
           };
         },
     );
 
-  const updateInternetEnabled$ = xs
-    .periodic(3000)
+  const shouldUpdateInternetEnabled$ = state$
+    .map(state => state.isVisible)
+    .compose(dropRepeats())
+    .map(
+      isTabVisible =>
+        isTabVisible
+          ? concat(xs.of(0), xs.periodic(1000).take(2), xs.periodic(4000))
+          : xs.never(),
+    )
+    .flatten()
+    .startWith(null);
+
+  const updateInternetEnabled$ = shouldUpdateInternetEnabled$
     .map(() => networkSource.hasInternetConnection())
     .flatten()
     .map(
@@ -87,7 +110,9 @@ export default function model(
             lanEnabled: prev.lanEnabled,
             internetEnabled,
             isSyncing: prev.isSyncing,
+            isVisible: prev.isVisible,
             peers: prev.peers,
+            stagedPeers: prev.stagedPeers,
           };
         },
     );
@@ -100,7 +125,24 @@ export default function model(
           lanEnabled: prev.lanEnabled,
           internetEnabled: prev.internetEnabled,
           isSyncing: prev.isSyncing,
+          isVisible: prev.isVisible,
           peers,
+          stagedPeers: prev.stagedPeers,
+        };
+      },
+  );
+
+  const setStagedPeersReducer$ = ssbSource.stagedPeers$.map(
+    stagedPeers =>
+      function setPeersReducer(prev: State): State {
+        return {
+          selfFeedId: prev.selfFeedId,
+          lanEnabled: prev.lanEnabled,
+          internetEnabled: prev.internetEnabled,
+          isSyncing: prev.isSyncing,
+          isVisible: prev.isVisible,
+          peers: prev.peers,
+          stagedPeers,
         };
       },
   );
@@ -111,5 +153,6 @@ export default function model(
     updateLanEnabled$,
     updateInternetEnabled$,
     setPeersReducer$,
+    setStagedPeersReducer$,
   );
 }

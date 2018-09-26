@@ -1,4 +1,4 @@
-rootProject.name = 'MMMMM'
+rootProject.name = 'Manyverse'
 include ':react-native-bluetooth-serial'
 project(':react-native-bluetooth-serial').projectDir = new File(rootProject.projectDir, '../node_modules/@happy0/react-native-bluetooth-serial/android')
 include ':nodejs-mobile-react-native'

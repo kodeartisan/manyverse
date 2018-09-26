@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -18,7 +18,14 @@
  */
 
 import {PureComponent} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import {h} from '@cycle/react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Palette} from '../global-styles/palette';
@@ -76,12 +83,14 @@ export const styles = StyleSheet.create({
 
 function peerModeIcon(source: PeerMetadata['source']): string {
   if (source === 'local') return 'wifi';
+  if ((source as any) === 'dht') return 'account-network';
   if (source === 'pub') return 'server-network';
   return 'server-network';
 }
 
 function peerModeTitle(source: PeerMetadata['source']): string {
   if (source === 'local') return 'Local network';
+  if ((source as any) === 'dht') return 'Internet P2P';
   if (source === 'pub') return 'Internet server';
   return 'Internet server';
 }
@@ -89,6 +98,7 @@ function peerModeTitle(source: PeerMetadata['source']): string {
 export type Props = {
   peers: Array<PeerMetadata>;
   onPressPeer?: (id: FeedId) => void;
+  style?: StyleProp<ViewStyle>;
 };
 
 export default class ConnectionsList extends PureComponent<Props> {
@@ -137,7 +147,7 @@ export default class ConnectionsList extends PureComponent<Props> {
   public render() {
     return h(
       View,
-      {style: styles.container},
+      {style: [styles.container, this.props.style]},
       this.props.peers.map(peer => this.renderItem(peer)),
     );
   }

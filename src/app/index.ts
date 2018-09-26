@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -18,15 +18,16 @@
  */
 
 export enum Screens {
-  Central = 'mmmmm.Central',
-  Drawer = 'mmmmm.Drawer',
-  Compose = 'mmmmm.Compose',
-  Thread = 'mmmmm.Thread',
-  InvitePaste = 'mmmmm.Invite.Paste',
-  Profile = 'mmmmm.Profile',
-  ProfileEdit = 'mmmmm.Profile.Edit',
-  RawDatabase = 'mmmmm.RawDatabase',
-  RawMessage = 'mmmmm.RawMessage',
+  Central = 'Manyverse.Central',
+  Drawer = 'Manyverse.Drawer',
+  Compose = 'Manyverse.Compose',
+  Thread = 'Manyverse.Thread',
+  InvitePaste = 'Manyverse.Invite.Paste',
+  InviteCreate = 'Manyverse.Invite.Create',
+  Profile = 'Manyverse.Profile',
+  ProfileEdit = 'Manyverse.Profile.Edit',
+  RawDatabase = 'Manyverse.RawDatabase',
+  RawMessage = 'Manyverse.RawMessage',
 }
 
 import onionify from 'cycle-onionify';
@@ -36,6 +37,7 @@ import {linkingDriver} from 'cycle-native-linking';
 import {makeToastDriver} from './drivers/toast';
 import {notificationDriver} from 'cycle-native-android-local-notification';
 import {ssbDriver} from './drivers/ssb';
+import {shareDriver} from 'cycle-native-share';
 import {makeNetworkDriver} from './drivers/network';
 import {dialogDriver} from './drivers/dialogs';
 import {makeActivityLifecycleDriver} from './drivers/lifecycle';
@@ -46,22 +48,23 @@ import {thread} from './screens/thread/index';
 import {pasteInvite} from './screens/invite-paste/index';
 import {profile} from './screens/profile/index';
 import {editProfile} from './screens/profile-edit/index';
+import {createInvite} from './screens/invite-create';
 import {rawDatabase} from './screens/raw-db/index';
 import {rawMessage} from './screens/raw-msg/index';
 import {Palette} from './global-styles/palette';
 import {Typography} from './global-styles/typography';
-import {addDisclaimer} from './alpha-disclaimer';
 
 export const screens: {[k in Screens]?: (so: any) => any} = {
-  [Screens.Central]: addDisclaimer(onionify(central)),
+  [Screens.Central]: onionify(central),
   [Screens.Drawer]: onionify(drawer),
   [Screens.Compose]: onionify(compose),
-  [Screens.Thread]: addDisclaimer(onionify(thread)),
-  [Screens.InvitePaste]: addDisclaimer(onionify(pasteInvite)),
-  [Screens.Profile]: addDisclaimer(onionify(profile)),
-  [Screens.ProfileEdit]: addDisclaimer(onionify(editProfile)),
-  [Screens.RawDatabase]: addDisclaimer(rawDatabase),
-  [Screens.RawMessage]: addDisclaimer(rawMessage),
+  [Screens.Thread]: onionify(thread),
+  [Screens.InvitePaste]: onionify(pasteInvite),
+  [Screens.InviteCreate]: onionify(createInvite),
+  [Screens.Profile]: onionify(profile),
+  [Screens.ProfileEdit]: onionify(editProfile),
+  [Screens.RawDatabase]: rawDatabase,
+  [Screens.RawMessage]: rawMessage,
 };
 
 export const drivers = {
@@ -69,6 +72,7 @@ export const drivers = {
   keyboard: makeKeyboardDriver(),
   linking: linkingDriver,
   ssb: ssbDriver,
+  share: shareDriver,
   lifecycle: makeActivityLifecycleDriver(),
   network: makeNetworkDriver(),
   notification: notificationDriver,
@@ -100,11 +104,11 @@ export const layout = {
   },
 };
 
-import BluetoothManager = require('./bluetooth-manager');
+require('./bluetooth-manager');
 //require('./bluetooth-manager');
 
-var manager = BluetoothManager();
-manager.connect("7C:E9:D3:BB:72:0D")
+//var manager = BluetoothManager();
+//manager.connect("7C:E9:D3:BB:72:0D")
 
 
 export const defaultNavOptions = {

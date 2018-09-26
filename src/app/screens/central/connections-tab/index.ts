@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -53,7 +53,7 @@ export function connectionsTab(sources: Sources): Sinks {
   const actions = intent(sources.screen, sources.fab);
   const vdom$ = view(sources.onion.state$);
   const command$ = navigation(actions, sources.onion.state$);
-  const reducer$ = model(sources.ssb, sources.network);
+  const reducer$ = model(sources.onion.state$, sources.ssb, sources.network);
   const fabProps$ = floatingAction(sources.onion.state$);
   const alert$ = alert(actions, sources.onion.state$);
 

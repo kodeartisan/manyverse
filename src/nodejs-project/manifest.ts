@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -115,6 +115,15 @@ export = {
     publicUpdates: 'source',
     profile: 'source',
     thread: 'source',
+  },
+  dhtInvite: {
+    start: 'async',
+    create: 'async',
+    use: 'async',
+    accept: 'async',
+    channels: 'source',
+    hostingInvites: 'source',
+    claimingInvites: 'source',
   },
 
   // This project's plugins

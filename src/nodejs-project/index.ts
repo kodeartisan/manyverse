@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -17,25 +17,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const fs = require('fs');
+import fs = require('fs');
 const path = require('path');
 const ssbKeys = require('ssb-keys');
 const mkdirp = require('mkdirp');
-const makeNoauthPlugin = require('multiserver/plugins/noauth');
-const makeWSPlugin = require('multiserver/plugins/ws');
+const DHT = require('multiserver-dht');
 import syncingPlugin = require('./plugins/syncing');
 import manifest = require('./manifest');
+import exportSecret = require('./export-secret');
+import importSecret = require('./import-secret');
 
 const bluetoothTransport = require('ssb-mobile-bluetooth')
 
 // Hack until appDataDir plugin comes out
-const writablePath = path.join(__dirname, '..');
-const ssbPath = path.resolve(writablePath, '.ssb');
-
+const appExclusivePath = path.join(__dirname, '..');
+const ssbPath = path.resolve(appExclusivePath, '.ssb');
 if (!fs.existsSync(ssbPath)) {
   mkdirp.sync(ssbPath);
 }
-const keys = ssbKeys.loadOrCreateSync(path.join(ssbPath, '/secret'));
+const keysPath = path.join(ssbPath, '/secret');
+
+/**
+ * This helps us migrate secrets from one location to the other
+ * because app codename will change from alpha to beta.
+ */
+type ReleaseType = 'last-alpha' | 'first-beta' | 'other';
+
+const releaseType: ReleaseType = 'first-beta';
+
+let keys: any;
+if ((releaseType as any) === 'last-alpha') {
+  keys = ssbKeys.loadOrCreateSync(keysPath);
+  exportSecret(ssbPath, keys);
+} else if (releaseType === 'first-beta') {
+  keys = importSecret(ssbPath, keysPath) || ssbKeys.loadOrCreateSync(keysPath);
+} else {
+  keys = ssbKeys.loadOrCreateSync(keysPath);
+}
 
 const config = require('ssb-config/inject')();
 config.path = ssbPath;
@@ -44,51 +62,35 @@ config.manifest = manifest;
 config.friends.hops = 2;
 config.connections = {
   incoming: {
-    ws: [{scope: 'private', transform: 'noauth'}],
+    //net: [{scope: 'private', transform: 'shs', port: 8008}],
+    //dht: [{scope: 'public', transform: 'shs', port: 8423}],
+    //ws: [{scope: 'device', transform: 'noauth', port: 8422}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
   outgoing: {
-    ws: [{scope: 'private', transform: 'noauth'}],
+    //net: [{transform: 'shs'}],
+    //dht: [{transform: 'shs'}],
+    //ws: [{transform: 'shs'}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
 };
 
-function noauthTransform(stack: any, cfg: any) {
-  stack.multiserver.transform({
-    name: 'noauth',
-    create: () => {
-      return makeNoauthPlugin({
-        keys: {
-          publicKey: Buffer.from(cfg.keys.public, 'base64'),
-        },
-      });
-    },
+function dhtTransport(_sbot: any) {
+
+  _sbot.multiserver.transport({
+    name: 'dht',
+    create: (dhtConfig: any) =>
+      DHT({keys: _sbot.dhtInvite.channels(), port: dhtConfig.port}),
   });
 }
 
-function wsTransport(stack: any) {
-
-  // stack.publish({
-  //   type: 'contact',
-  //   contact: "@RJ09Kfs3neEZPrbpbWVDxkN92x9moe3aPusOMOc4S2I=.ed25519",
-  //   following: true 
-  // }, (err: any) => console.log("Follow err: " + err) );
-
-  stack.multiserver.transport({
-    name: 'ws',
-    create: () => {
-      return makeWSPlugin({host: 'localhost', port: '8422'});
-    },
-  });
-}
-
-require('scuttlebot/index')
-  .use(wsTransport)
-  .use(noauthTransform)
+const sbot = require('scuttlebot/index')
+  .use(require('ssb-dht-invite'))
+  .use(dhtTransport)
   .use(bluetoothTransport)
   .use(require('scuttlebot/plugins/plugins'))
   .use(require('scuttlebot/plugins/master'))
-  .use(require('scuttlebot/plugins/gossip'))
+  .use(require('@staltz/sbot-gossip'))
   .use(require('scuttlebot/plugins/replicate'))
   .use(syncingPlugin)
   .use(require('ssb-friends'))
@@ -105,3 +107,5 @@ require('scuttlebot/index')
   .use(require('scuttlebot/plugins/logging'))
   .use(require('ssb-ebt'))
   .call(null, config);
+
+sbot.dhtInvite.start();

@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -62,6 +62,12 @@ export type ThreadAndExtras = {
   full: boolean;
 };
 
+export type StagedPeerMetadata = {
+  key: string;
+  source: 'local' | 'dht' | 'pub';
+  role?: 'client' | 'server';
+};
+
 function mutateMsgWithLiveExtras(api: any) {
   return (msg: Msg) => {
     if (isMsg(msg)) {
@@ -88,6 +94,8 @@ function mutateThreadWithLiveExtras(api: any) {
 
 export type GetReadable<T> = (opts?: any) => Readable<T>;
 
+export type HostingDhtInvite = {seed: string; claimer: string; online: boolean};
+
 export class SSBSource {
   public selfFeedId$: Stream<FeedId>;
   public publicRawFeed$: Stream<GetReadable<MsgAndExtras>>;
@@ -99,6 +107,9 @@ export class SSBSource {
   public publishHook$: Stream<Msg>;
   public peers$: Stream<Array<PeerMetadata>>;
   public acceptInviteResponse$: Stream<true | string>;
+  public acceptDhtInviteResponse$: Stream<true | string>;
+  public hostingDhtInvites$: Stream<Array<HostingDhtInvite>>;
+  public stagedPeers$: Stream<Array<StagedPeerMetadata>>;
 
   constructor(private api$: Stream<any>) {
     this.selfFeedId$ = api$.map(api => api.keys.sync.id[0]());
@@ -148,12 +159,47 @@ export class SSBSource {
       .map(api => api.sbot.hook.publishStream[0]() as Stream<Msg>)
       .flatten();
 
+    this.hostingDhtInvites$ = api$
+      .map(api =>
+        xsFromPullStream<Array<HostingDhtInvite>>(
+          api.sbot.pull.hostingDhtInvites[0](),
+        ),
+      )
+      .flatten();
+
     this.peers$ = api$
       .map(api => {
         const peers$ = api.sbot.obs.connectedPeers[0]() as Stream<
           Map<string, PeerMetadata>
         >;
-        const peersArr$ = peers$.map(es6map => Array.from(es6map.entries()));
+        const normalPeersArr$ = peers$
+          .map(es6map => Array.from(es6map.entries()))
+          .startWith([]);
+
+        const dhtClientsArr$ = this.hostingDhtInvites$
+          .map(invites =>
+            invites.filter(invite => invite.online).map(
+              invite =>
+                [
+                  invite.claimer,
+                  {
+                    host: invite.seed,
+                    port: 0,
+                    key: invite.claimer,
+                    source: 'dht' as any,
+                    client: true,
+                    state: 'connected',
+                    stateChange: 0,
+                  } as PeerMetadata,
+                ] as [string, PeerMetadata],
+            ),
+          )
+          .startWith([]);
+
+        const peersArr$ = xs
+          .combine(normalPeersArr$, dhtClientsArr$)
+          .map(([peers1, peers2]) => peers1.concat(peers2));
+
         const peersWithExtras$ = peersArr$
           .map(peersArr =>
             xs.combine(
@@ -175,6 +221,42 @@ export class SSBSource {
       .flatten();
 
     this.acceptInviteResponse$ = xs.create<true | string>();
+    this.acceptDhtInviteResponse$ = xs.create<true | string>();
+
+    this.stagedPeers$ = api$
+      .map(api => {
+        const hosting$ = this.hostingDhtInvites$
+          .map(invites =>
+            invites.filter(invite => !invite.online).map(
+              ({seed}) =>
+                ({
+                  key: seed,
+                  source: 'dht',
+                  role: 'server',
+                } as StagedPeerMetadata),
+            ),
+          )
+          .startWith([]);
+
+        const claiming$: Stream<Array<StagedPeerMetadata>> = xsFromPullStream(
+          api.sbot.pull.claimingDhtInvites[0](),
+        )
+          .map((invites: Array<string>) =>
+            invites.map(
+              invite =>
+                ({
+                  key: invite,
+                  source: 'dht',
+                  role: 'client',
+                } as StagedPeerMetadata),
+            ),
+          )
+          .startWith([]);
+
+        return xs.combine(hosting$, claiming$);
+      })
+      .flatten()
+      .map(([hosting, claiming]) => hosting.concat(claiming));
   }
 
   public thread$(rootMsgId: MsgId): Stream<ThreadAndExtras> {
@@ -230,6 +312,12 @@ export class SSBSource {
       })
       .flatten();
   }
+
+  public createDhtInvite$(): Stream<string> {
+    return this.api$
+      .map(api => xsFromCallback<string>(api.sbot.async.createDhtInvite[0])())
+      .flatten();
+  }
 }
 
 export type PublishReq = {
@@ -242,7 +330,12 @@ export type AcceptInviteReq = {
   invite: string;
 };
 
-export type Req = PublishReq | AcceptInviteReq;
+export type AcceptDhtInviteReq = {
+  type: 'dhtInvite.accept';
+  invite: string;
+};
+
+export type Req = PublishReq | AcceptInviteReq | AcceptDhtInviteReq;
 
 function dropCompletion(stream: Stream<any>): Stream<any> {
   return xs.merge(stream, xs.never());
@@ -296,6 +389,15 @@ export function ssbDriver(sink: Stream<Req>): SSBSource {
               source.acceptInviteResponse$._n(err.message || err);
             } else {
               source.acceptInviteResponse$._n(true);
+            }
+          });
+        }
+        if (req.type === 'dhtInvite.accept') {
+          api.sbot.async.acceptDhtInvite[0](req.invite, (err: any, v: any) => {
+            if (err) {
+              source.acceptDhtInviteResponse$._n(err.message || err);
+            } else {
+              source.acceptDhtInviteResponse$._n(true);
             }
           });
         }

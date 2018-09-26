@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -30,12 +30,12 @@ export default function floatingAction(state$: Stream<State>): Stream<Props> {
         color: Palette.brand.callToActionBackground,
         visible: state.internetEnabled,
         actions: [
-          // {
-          //   color: Palette.brand.callToActionBackground,
-          //   name: 'invite-send',
-          //   icon: require('../../../../../images/share.png'),
-          //   text: 'Send invite',
-          // },
+          {
+            color: Palette.brand.callToActionBackground,
+            name: 'invite-create',
+            icon: require('../../../../../images/share.png'),
+            text: 'Create invite',
+          },
 
           {
             color: Palette.brand.callToActionBackground,

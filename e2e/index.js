@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -45,6 +45,7 @@ test('Setup and open Android app', function(t) {
 
 test('...', function(t) {
   require('./central.js')(driver, t);
+  require('./connections.js')(driver, t);
   require('./compose.js')(driver, t);
   require('./drawer.js')(driver, t);
   require('./feed.js')(driver, t);

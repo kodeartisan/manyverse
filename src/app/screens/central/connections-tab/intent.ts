@@ -1,5 +1,5 @@
 /**
- * MMMMM is a mobile app for Secure Scuttlebutt networks
+ * Manyverse is a mobile app for Secure Scuttlebutt networks
  *
  * Copyright (C) 2017 Andre 'Staltz' Medeiros
  *
@@ -28,6 +28,8 @@ export default function intent(
   return {
     showLANHelp$: reactSource.select('lan-mode').events('press'),
 
+    showDHTHelp$: reactSource.select('dht-mode').events('press'),
+
     showPubHelp$: reactSource.select('pub-mode').events('press'),
 
     goToPeerProfile$: reactSource
@@ -35,5 +37,7 @@ export default function intent(
       .events('pressPeer') as Stream<FeedId>,
 
     goToPasteInvite$: fabPress$.filter(action => action === 'invite-paste'),
+
+    goToCreateInvite$: fabPress$.filter(action => action === 'invite-create'),
   };
 }

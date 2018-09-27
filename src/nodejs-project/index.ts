@@ -62,15 +62,15 @@ config.manifest = manifest;
 config.friends.hops = 2;
 config.connections = {
   incoming: {
-    //net: [{scope: 'private', transform: 'shs', port: 8008}],
-    //dht: [{scope: 'public', transform: 'shs', port: 8423}],
-    //ws: [{scope: 'device', transform: 'noauth', port: 8422}],
+    net: [{scope: 'private', transform: 'shs', port: 8008}],
+    dht: [{scope: 'public', transform: 'shs', port: 8423}],
+    ws: [{scope: 'device', transform: 'noauth', port: 8422}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
   outgoing: {
-    //net: [{transform: 'shs'}],
-    //dht: [{transform: 'shs'}],
-    //ws: [{transform: 'shs'}],
+    net: [{transform: 'shs'}],
+    dht: [{transform: 'shs'}],
+    ws: [{transform: 'shs'}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
 };

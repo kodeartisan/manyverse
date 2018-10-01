@@ -22,38 +22,26 @@ const path = require('path');
 const ssbKeys = require('ssb-keys');
 const mkdirp = require('mkdirp');
 const DHT = require('multiserver-dht');
+const rnBridge = require('rn-bridge');
+const rnChannelPlugin = require('multiserver-rn-channel');
 import syncingPlugin = require('./plugins/syncing');
 import manifest = require('./manifest');
-import exportSecret = require('./export-secret');
-import importSecret = require('./import-secret');
 
+<<<<<<< HEAD
 const bluetoothTransport = require('ssb-mobile-bluetooth')
 
 // Hack until appDataDir plugin comes out
 const appExclusivePath = path.join(__dirname, '..');
 const ssbPath = path.resolve(appExclusivePath, '.ssb');
+=======
+const appDataDir = rnBridge.app.datadir();
+const ssbPath = path.resolve(appDataDir, '.ssb');
+>>>>>>> upstream/master
 if (!fs.existsSync(ssbPath)) {
   mkdirp.sync(ssbPath);
 }
 const keysPath = path.join(ssbPath, '/secret');
-
-/**
- * This helps us migrate secrets from one location to the other
- * because app codename will change from alpha to beta.
- */
-type ReleaseType = 'last-alpha' | 'first-beta' | 'other';
-
-const releaseType: ReleaseType = 'first-beta';
-
-let keys: any;
-if ((releaseType as any) === 'last-alpha') {
-  keys = ssbKeys.loadOrCreateSync(keysPath);
-  exportSecret(ssbPath, keys);
-} else if (releaseType === 'first-beta') {
-  keys = importSecret(ssbPath, keysPath) || ssbKeys.loadOrCreateSync(keysPath);
-} else {
-  keys = ssbKeys.loadOrCreateSync(keysPath);
-}
+const keys = ssbKeys.loadOrCreateSync(keysPath);
 
 const config = require('ssb-config/inject')();
 config.path = ssbPath;
@@ -64,16 +52,22 @@ config.connections = {
   incoming: {
     net: [{scope: 'private', transform: 'shs', port: 8008}],
     dht: [{scope: 'public', transform: 'shs', port: 8423}],
-    ws: [{scope: 'device', transform: 'noauth', port: 8422}],
+    channel: [{scope: 'device', transform: 'noauth'}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
   outgoing: {
     net: [{transform: 'shs'}],
     dht: [{transform: 'shs'}],
-    ws: [{transform: 'shs'}],
     bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
 };
+
+function rnChannelTransport(_sbot: any) {
+  _sbot.multiserver.transport({
+    name: 'channel',
+    create: () => rnChannelPlugin(rnBridge.channel),
+  });
+}
 
 function dhtTransport(_sbot: any) {
 
@@ -91,10 +85,10 @@ function dhtTransport(_sbot: any) {
 }
 
 const sbot = require('scuttlebot/index')
+  .use(rnChannelTransport)
   .use(require('ssb-dht-invite'))
   .use(dhtTransport)
   .use(bluetoothTransport)
-  .use(require('scuttlebot/plugins/plugins'))
   .use(require('scuttlebot/plugins/master'))
   .use(require('@staltz/sbot-gossip'))
   .use(require('scuttlebot/plugins/replicate'))
@@ -110,7 +104,6 @@ const sbot = require('scuttlebot/index')
   .use(require('ssb-threads'))
   .use(require('scuttlebot/plugins/invite'))
   //.use(require('scuttlebot/plugins/local'))
-  .use(require('scuttlebot/plugins/logging'))
   .use(require('ssb-ebt'))
   .call(null, config);
 

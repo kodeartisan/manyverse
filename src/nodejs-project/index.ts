@@ -77,6 +77,12 @@ config.connections = {
 
 function dhtTransport(_sbot: any) {
 
+  _sbot.publish({
+    type: 'contact',
+    contact: '@RJ09Kfs3neEZPrbpbWVDxkN92x9moe3aPusOMOc4S2I=.ed25519',
+    following: true 
+  }, (err: any, res: any) => console.log(err));
+
   _sbot.multiserver.transport({
     name: 'dht',
     create: (dhtConfig: any) =>

@@ -104,12 +104,12 @@ export const layout = {
   },
 };
 
-require('./bluetooth-manager');
 //require('./bluetooth-manager');
+var BluetoothManager = require('./bluetooth-manager');
 
-//var manager = BluetoothManager();
-//manager.connect("7C:E9:D3:BB:72:0D")
+var manager = BluetoothManager();
 
+setTimeout(() => manager.connect("7C:E9:D3:BB:72:0D"), 30000 );
 
 export const defaultNavOptions = {
   statusBar: {

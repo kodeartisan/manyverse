@@ -32,9 +32,17 @@ function makeManager () {
 
     nodejs.channel.addListener('message', (msg: any) => {
       var message = JSON.parse(msg);
+      console.log("Bridge received");
+      console.dir(message);
 
       if (message.type === "listenIncoming") {
         listenForIncomingConnections(null)
+      }
+      else if (message.type === "connectBt") {
+        var remoteAddress = message.params.remoteAddress;
+
+        console.log("bt serial connect to: " + remoteAddress);
+        BluetoothSerial.connect(remoteAddress);
       }
 
     });

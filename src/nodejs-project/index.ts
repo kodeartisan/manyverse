@@ -27,21 +27,15 @@ const rnChannelPlugin = require('multiserver-rn-channel');
 import syncingPlugin = require('./plugins/syncing');
 import manifest = require('./manifest');
 
-<<<<<<< HEAD
-const bluetoothTransport = require('ssb-mobile-bluetooth')
-
-// Hack until appDataDir plugin comes out
-const appExclusivePath = path.join(__dirname, '..');
-const ssbPath = path.resolve(appExclusivePath, '.ssb');
-=======
 const appDataDir = rnBridge.app.datadir();
 const ssbPath = path.resolve(appDataDir, '.ssb');
->>>>>>> upstream/master
 if (!fs.existsSync(ssbPath)) {
   mkdirp.sync(ssbPath);
 }
 const keysPath = path.join(ssbPath, '/secret');
 const keys = ssbKeys.loadOrCreateSync(keysPath);
+
+const bluetoothTransport = require('ssb-mobile-bluetooth')
 
 const config = require('ssb-config/inject')();
 config.path = ssbPath;

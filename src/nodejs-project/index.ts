@@ -52,7 +52,7 @@ config.connections = {
   outgoing: {
     net: [{transform: 'shs'}],
     dht: [{transform: 'shs'}],
-    bluetooth: [{scope: 'public', transform: 'noauth'}]
+    bluetooth: [{scope: 'public', transform: 'shs'}]
   },
 };
 
@@ -64,12 +64,6 @@ function rnChannelTransport(_sbot: any) {
 }
 
 function dhtTransport(_sbot: any) {
-
-  _sbot.publish({
-    type: 'contact',
-    contact: '@RJ09Kfs3neEZPrbpbWVDxkN92x9moe3aPusOMOc4S2I=.ed25519',
-    following: true 
-  }, (err: any, res: any) => console.log(err));
 
   _sbot.multiserver.transport({
     name: 'dht',

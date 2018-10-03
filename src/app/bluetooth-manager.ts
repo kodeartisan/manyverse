@@ -32,13 +32,8 @@ function makeManager () {
 
     nodejs.channel.addListener('message', (msg: any) => {
       var message = JSON.parse(msg);
-      console.log("Bridge received");
-      console.dir(message);
 
-      if (message.type === "listenIncoming") {
-        listenForIncomingConnections(null)
-      }
-      else if (message.type === "connectBt") {
+       if (message.type === "connectBt") {
         var remoteAddress = message.params.remoteAddress;
 
         console.log("bt serial connect to: " + remoteAddress);
@@ -48,8 +43,8 @@ function makeManager () {
     });
   }
 
-  function listenForIncomingConnections(cb: any): void {
-    console.log("bluetooth-man: Listening for incoming connections");
+  function allowIncomingConnections(): void {
+    console.log("bluetooth-man: Allowing incoming connections");
 
     BluetoothSerial.listenForIncomingConnections(
       "scuttlebutt", serviceUUID
@@ -90,11 +85,13 @@ function makeManager () {
 
   setupEventListeners();
 
+  allowIncomingConnections();
+
   return {
     connect: connect,
     makeDeviceDiscoverable: makeDeviceDiscoverable,
+    allowIncomingConnections: allowIncomingConnections,
     discoverUnpairedDevices: discoverUnpairedDevices,
-    listenForIncomingConnections: listenForIncomingConnections,
     listPairedDevices: listPairedDevices,
     stopServer: stopServer
   }

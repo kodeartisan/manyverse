@@ -52,7 +52,7 @@ config.connections = {
   outgoing: {
     net: [{transform: 'shs'}],
     dht: [{transform: 'shs'}],
-    bluetooth: [{scope: 'public', transform: 'shs'}]
+    bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
 };
 
@@ -91,7 +91,7 @@ const sbot = require('scuttlebot/index')
   .use(require('ssb-query'))
   .use(require('ssb-threads'))
   .use(require('scuttlebot/plugins/invite'))
-  //.use(require('scuttlebot/plugins/local'))
+  .use(require('scuttlebot/plugins/local'))
   .use(require('ssb-ebt'))
   .call(null, config);
 

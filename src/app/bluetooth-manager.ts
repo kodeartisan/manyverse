@@ -60,8 +60,8 @@ function makeManager () {
     return BluetoothSerial.makeDeviceDiscoverable(seconds);
   }
 
-  function discoverUnpairedDevices(): any {
-     return BluetoothSerial.discoverUnpairedDevices();
+  function discoverNearbyDevices(): any {
+     return BluetoothSerial.discoverNearbyDevices();
   }
 
   function listPairedDevices(): any {
@@ -91,7 +91,7 @@ function makeManager () {
     connect: connect,
     makeDeviceDiscoverable: makeDeviceDiscoverable,
     allowIncomingConnections: allowIncomingConnections,
-    discoverUnpairedDevices: discoverUnpairedDevices,
+    discoverNearbyDevices: discoverNearbyDevices,
     listPairedDevices: listPairedDevices,
     stopServer: stopServer
   }

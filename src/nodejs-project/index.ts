@@ -21,9 +21,11 @@ import fs = require('fs');
 const path = require('path');
 const ssbKeys = require('ssb-keys');
 const mkdirp = require('mkdirp');
-const DHT = require('multiserver-dht');
 const rnBridge = require('rn-bridge');
-const rnChannelPlugin = require('multiserver-rn-channel');
+const dhtMsPlugin = require('multiserver-dht');
+const rnChannelMsPlugin = require('multiserver-rn-channel');
+const bluetoothMsPlugin = require('multiserver-bluetooth');
+const BluetoothManager = require('ssb-mobile-bluetooth-manager');
 import syncingPlugin = require('./plugins/syncing');
 import manifest = require('./manifest');
 
@@ -35,8 +37,6 @@ if (!fs.existsSync(ssbPath)) {
 const keysPath = path.join(ssbPath, '/secret');
 const keys = ssbKeys.loadOrCreateSync(keysPath);
 
-const bluetoothTransport = require('ssb-mobile-bluetooth')
-
 const config = require('ssb-config/inject')();
 config.path = ssbPath;
 config.keys = keys;
@@ -46,37 +46,43 @@ config.connections = {
   incoming: {
     net: [{scope: 'private', transform: 'shs', port: 8008}],
     dht: [{scope: 'public', transform: 'shs', port: 8423}],
+    bluetooth: [{scope: 'public', transform: 'noauth'}],
     channel: [{scope: 'device', transform: 'noauth'}],
-    bluetooth: [{scope: 'public', transform: 'noauth'}]
   },
   outgoing: {
     net: [{transform: 'shs'}],
     dht: [{transform: 'shs'}],
-    bluetooth: [{scope: 'public', transform: 'noauth'}]
+    bluetooth: [{scope: 'public', transform: 'noauth'}],
   },
 };
+
+function dhtTransport(_sbot: any) {
+  _sbot.multiserver.transport({
+    name: 'dht',
+    create: (dhtConfig: any) =>
+      dhtMsPlugin({keys: _sbot.dhtInvite.channels(), port: dhtConfig.port}),
+  });
+}
+
+function bluetoothTransport(_sbot: any) {
+  _sbot.multiserver.transport({
+    name: 'bluetooth',
+    create: () => bluetoothMsPlugin({bluetoothManager: BluetoothManager()}),
+  });
+}
 
 function rnChannelTransport(_sbot: any) {
   _sbot.multiserver.transport({
     name: 'channel',
-    create: () => rnChannelPlugin(rnBridge.channel),
-  });
-}
-
-function dhtTransport(_sbot: any) {
-
-  _sbot.multiserver.transport({
-    name: 'dht',
-    create: (dhtConfig: any) =>
-      DHT({keys: _sbot.dhtInvite.channels(), port: dhtConfig.port}),
+    create: () => rnChannelMsPlugin(rnBridge.channel),
   });
 }
 
 const sbot = require('scuttlebot/index')
-  .use(rnChannelTransport)
   .use(require('ssb-dht-invite'))
   .use(dhtTransport)
   .use(bluetoothTransport)
+  .use(rnChannelTransport)
   .use(require('scuttlebot/plugins/master'))
   .use(require('@staltz/sbot-gossip'))
   .use(require('scuttlebot/plugins/replicate'))

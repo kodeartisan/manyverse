@@ -18,7 +18,6 @@
   },
   "files": [
     "src/app/index.ts",
-    "src/app/bluetooth-manager.ts",
     "src/nodejs-project/index.ts",
     "src/nodejs-project/loader.ts",
     "src/nodejs-project/manifest.ts",

@@ -24,8 +24,10 @@ const mkdirp = require('mkdirp');
 const rnBridge = require('rn-bridge');
 const dhtMsPlugin = require('multiserver-dht');
 const rnChannelMsPlugin = require('multiserver-rn-channel');
-const bluetoothMsPlugin = require('multiserver-bluetooth');
 const BluetoothManager = require('ssb-mobile-bluetooth-manager');
+
+const Bluetooth = require('ssb-bluetooth');
+
 import syncingPlugin = require('./plugins/syncing');
 import manifest = require('./manifest');
 
@@ -64,13 +66,6 @@ function dhtTransport(_sbot: any) {
   });
 }
 
-function bluetoothTransport(_sbot: any) {
-  _sbot.multiserver.transport({
-    name: 'bluetooth',
-    create: () => bluetoothMsPlugin({bluetoothManager: BluetoothManager()}),
-  });
-}
-
 function rnChannelTransport(_sbot: any) {
   _sbot.multiserver.transport({
     name: 'channel',
@@ -78,10 +73,12 @@ function rnChannelTransport(_sbot: any) {
   });
 }
 
+const bluetooth: any = BluetoothManager();
+
 const sbot = require('scuttlebot/index')
   .use(require('ssb-dht-invite'))
   .use(dhtTransport)
-  .use(bluetoothTransport)
+  .use(Bluetooth(bluetooth))
   .use(rnChannelTransport)
   .use(require('scuttlebot/plugins/master'))
   .use(require('@staltz/sbot-gossip'))

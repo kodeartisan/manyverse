@@ -125,9 +125,16 @@ export = {
     hostingInvites: 'source',
     claimingInvites: 'source',
   },
+  bluetooth: {
+    "refreshNearbyDevices": "async",
+    "nearbyDevices": "source",
+    "makeDeviceDiscoverable": "async"
+  },
 
   // This project's plugins
   syncing: {
     stream: 'source',
-  },
+  }
+
+
 };

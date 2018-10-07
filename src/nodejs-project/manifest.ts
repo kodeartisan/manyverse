@@ -126,7 +126,6 @@ export = {
     claimingInvites: 'source',
   },
   bluetooth: {
-    "refreshNearbyDevices": "async",
     "nearbyDevices": "source",
     "makeDeviceDiscoverable": "async"
   },

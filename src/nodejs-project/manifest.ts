@@ -133,7 +133,8 @@ export = {
   // This project's plugins
   syncing: {
     stream: 'source',
-  }
-
-
+  },
+  blobsFromPath: {
+    add: 'async',
+  },
 };

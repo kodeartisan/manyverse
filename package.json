@@ -1,6 +1,6 @@
 {
   "name": "manyverse",
-  "version": "0.18.10-02.beta",
+  "version": "0.18.10-06.beta",
   "private": true,
   "scripts": {
     "lib": "tsc",
@@ -69,6 +69,7 @@
     "react-native-dialogs": "0.0.20",
     "react-native-floating-action": "^1.13.0",
     "react-native-has-internet": "2.0.0",
+    "react-native-image-crop-picker": "^0.21.2",
     "react-native-navigation": "2.0.2452",
     "react-native-ssb-client-keys": "1.1.2",
     "react-native-ssb-shims": "4.0.0",

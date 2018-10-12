@@ -127,7 +127,8 @@ export = {
   },
   bluetooth: {
     "nearbyDevices": "source",
-    "makeDeviceDiscoverable": "async"
+    "makeDeviceDiscoverable": "async",
+    "isEnabled": "async"
   },
 
   // This project's plugins

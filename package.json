@@ -27,7 +27,7 @@
     "@cycle/isolate": "4.1",
     "@cycle/react": "1.4.0",
     "@cycle/state": "1.0.0",
-    "@happy0/react-native-bluetooth-serial": "1.1.4-rc1",
+    "@happy0/react-native-bluetooth-serial": "1.1.6-rc1",
     "@staltz/rn-viewpager": "1.2.5",
     "@types/react": "16.4.6",
     "@types/react-native": "0.55.26",

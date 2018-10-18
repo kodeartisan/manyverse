@@ -18,7 +18,7 @@
  */
 
 import {Stream} from 'xstream';
-import {StateSource, Reducer} from 'cycle-onionify';
+import {StateSource, Reducer} from '@cycle/state';
 import {ReactElement} from 'react';
 import {FeedId} from 'ssb-typescript';
 import {ReactSource} from '@cycle/react';
@@ -41,14 +41,14 @@ export type Sources = {
   props: Stream<Props>;
   screen: ReactSource;
   navigation: NavSource;
-  onion: StateSource<State>;
+  state: StateSource<State>;
   ssb: SSBSource;
 };
 
 export type Sinks = {
   screen: Stream<ReactElement<any>>;
   navigation: Stream<Command>;
-  onion: Stream<Reducer<State>>;
+  state: Stream<Reducer<State>>;
   ssb: Stream<Req>;
 };
 
@@ -64,19 +64,19 @@ export function profile(sources: Sources): Sinks {
 
   const actions = intent(sources.screen);
   const reducer$ = model(sources.props, sources.ssb);
-  const vdom$ = view(sources.onion.state$, sources.ssb, topBarSinks.screen);
-  const newContent$ = ssb(actions, sources.onion.state$);
+  const vdom$ = view(sources.state.stream, sources.ssb, topBarSinks.screen);
+  const newContent$ = ssb(actions, sources.state.stream);
   const command$ = navigation(
     actions,
     sources.navigation,
-    sources.onion.state$,
+    sources.state.stream,
     topBarSinks.back,
   );
 
   return {
     screen: vdom$,
     navigation: command$,
-    onion: reducer$,
+    state: reducer$,
     ssb: newContent$,
   };
 }

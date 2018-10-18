@@ -19,7 +19,7 @@
 
 import {Stream} from 'xstream';
 import {Command, NavSource} from 'cycle-native-navigation';
-import {StateSource, Reducer} from 'cycle-onionify';
+import {StateSource, Reducer} from '@cycle/state';
 import {MsgId, FeedId} from 'ssb-typescript';
 import {KeyboardSource} from 'cycle-native-keyboard';
 import {SSBSource, Req} from '../../drivers/ssb';
@@ -43,7 +43,7 @@ export type Sources = {
   navigation: NavSource;
   props: Stream<Props>;
   keyboard: KeyboardSource;
-  onion: StateSource<State>;
+  state: StateSource<State>;
   ssb: SSBSource;
 };
 
@@ -51,7 +51,7 @@ export type Sinks = {
   screen: Stream<ReactElement<any>>;
   navigation: Stream<Command>;
   keyboard: Stream<'dismiss'>;
-  onion: Stream<Reducer<State>>;
+  state: Stream<Reducer<State>>;
   ssb: Stream<Req>;
 };
 
@@ -75,15 +75,15 @@ export function thread(sources: Sources): Sinks {
     sources.screen,
     sources.keyboard,
     sources.ssb,
-    sources.onion.state$,
+    sources.state.stream,
   );
   const reducer$ = model(sources.props, actions, sources.ssb);
   const command$ = navigation(
     actions,
     sources.navigation,
-    sources.onion.state$,
+    sources.state.stream,
   );
-  const vdom$ = view(sources.onion.state$, actions);
+  const vdom$ = view(sources.state.stream, actions);
   const newContent$ = ssb(actions);
   const dismiss$ = actions.publishMsg$.mapTo('dismiss' as 'dismiss');
 
@@ -91,7 +91,7 @@ export function thread(sources: Sources): Sinks {
     screen: vdom$,
     navigation: command$,
     keyboard: dismiss$,
-    onion: reducer$,
+    state: reducer$,
     ssb: newContent$,
   };
 }
